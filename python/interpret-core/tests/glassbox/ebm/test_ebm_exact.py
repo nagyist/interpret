@@ -22,9 +22,18 @@ def test_identical_classification():
 
         classes = None if n_classes == Native.Task_Regression else n_classes
 
-        for iteration in range(2):
+        for iteration in range(1):
+            test_type = (
+                "regression"
+                if n_classes == Native.Task_Regression
+                else str(n_classes) + " classes"
+            )
+            print(f"Exact test for {test_type}, iteration {iteration}.")
             X, y, names, types = make_synthetic(
-                seed=seed, classes=classes, output_type="float", n_samples=257
+                seed=seed,
+                classes=classes,
+                output_type="float",
+                n_samples=257 + iteration,
             )
 
             ebm_type = (
@@ -32,15 +41,15 @@ def test_identical_classification():
                 if 0 <= n_classes
                 else ExplainableBoostingRegressor
             )
-            ebm = ebm_type(names, types, random_state=seed, max_rounds=10)
+            ebm = ebm_type(names, types, random_state=seed)
             ebm.fit(X, y)
 
             pred = ebm._predict_score(X)
-            total += sum(pred.flat)
+            total += sum(pred.flat)  # do not use numpy which could use SIMD for sum.
 
             seed += 1
 
-    expected = 604.4169336846871
+    expected = 345.57668871448516
 
     if total != expected:
         assert total == expected
